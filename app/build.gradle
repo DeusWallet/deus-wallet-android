@@ -1,0 +1,392 @@
+// NB: Android Studio can't find the imports; this does not affect the
+// actual build since Gradle can find them just fine.
+// remove after upgrading to 'com.android.tools.build:gradle:8.1.0' (AGP 8.1)
+import com.android.tools.profgen.ArtProfileKt
+import com.android.tools.profgen.ArtProfileSerializer
+import com.android.tools.profgen.DexFile
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
+apply plugin: 'kotlin-kapt'
+
+android {
+
+    defaultConfig {
+        applicationId "io.deus.wallet"
+        compileSdk compile_sdk_version
+        minSdkVersion min_sdk_version
+        targetSdkVersion compile_sdk_version
+        versionCode 1
+        versionName "0.40.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        kapt {
+            arguments {
+                arg("room.schemaLocation", "$projectDir/schemas".toString())
+                arg("room.incremental", true)
+            }
+        }
+        vectorDrawables.useSupportLibrary = true
+        lintOptions {
+            checkReleaseBuilds false
+        }
+
+        resValue "string", "companyWebPageLink", "https://deuswallet.com"
+        resValue "string", "appWebPageLink", "https://deuswallet.com"
+        resValue "string", "analyticsLink", "https://deuswallet.com/analytics"
+        resValue "string", "appGithubLink", "https://github.com/DeusWallet/deus-wallet-android"
+        resValue "string", "appTwitterLink", "https://twitter.com/DeusWallet"
+        resValue "string", "appTelegramLink", "https://t.me/DeusWallet"
+        resValue "string", "appRedditLink", "https://www.reddit.com/"
+        resValue "string", "reportEmail", "support@deuswallet.com"
+        resValue "string", "releaseNotesUrl", "https://api.github.com/repos/DeusWallet/deus-wallet-android/releases/tags/"
+        resValue "string", "walletConnectAppMetaDataName", "Deus"
+        resValue "string", "walletConnectAppMetaDataUrl", "deuswallet.com"
+        resValue "string", "walletConnectAppMetaDataIcon", "https://deuswallet.com/images/img/icons/components/text/logo.svg"
+        resValue "string", "accountsBackupFileSalt", "deus"
+    }
+
+    buildFeatures {
+        compose true
+        viewBinding true
+    }
+
+    signingConfigs {
+        appCenter {
+            storeFile file("./test.keystore")
+            storePassword "testKeystore123"
+
+            keyAlias "testKeystore"
+            keyPassword "testKeystore123"
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            applicationIdSuffix ".dev"
+            resValue "string", "twitterBearerToken", ""
+            resValue "string", "uniswapGraphUrl", "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
+            resValue "string", "etherscanKey", ""
+            resValue "string", "bscscanKey", ""
+            resValue "string", "polygonscanKey", ""
+            resValue "string", "snowtraceApiKey", ""
+            resValue "string", "optimisticEtherscanApiKey", ""
+            resValue "string", "arbiscanApiKey", ""
+            resValue "string", "gnosisscanApiKey", ""
+            resValue "string", "ftmscanApiKey", ""
+            resValue "string", "is_release", "false"
+            resValue "string", "guidesUrl", "https://raw.githubusercontent.com/DeusWallet/blockchain-crypto-guides/main/index.json"
+            resValue "string", "faqUrl", "https://raw.githubusercontent.com/DeusWallet/deus-wallet-faq/master/faq.json"
+            resValue "string", "coinsJsonUrl", "https://raw.githubusercontent.com/DeusWallet/deus-cryptocurrencies/main/coins.json"
+            resValue "string", "providerCoinsJsonUrl", "https://raw.githubusercontent.com/DeusWallet/deus-cryptocurrencies/main/provider.coins.json"
+            resValue "string", "marketApiBaseUrl", "https://api-dev.blocksdecoded.com"
+            resValue "string", "marketApiKey", ""
+            resValue "string", "openSeaApiKey", ""
+            resValue "string", "walletConnectV2Key", ""
+            resValue "string", "solscanApiKey", ""
+            resValue "string", "trongridApiKeys", ""
+            resValue "string", "udnApiKey", ""
+            resValue "string", "oneInchApiKey", ""
+            resValue "string", "blocksDecodedEthereumRpc", "https://api-dev.blocksdecoded.com/v1/ethereum-rpc/mainnet"
+        }
+
+        appcenterdebug {
+            initWith debug
+            defaultConfig.versionCode System.getenv("BUILD_NUMBER")?.toInteger() ?: defaultConfig.versionCode
+            applicationIdSuffix ".dev.appcenter"
+            signingConfig signingConfigs.appCenter
+            matchingFallbacks = ['debug']
+        }
+
+        release {
+            debuggable false
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            resValue "string", "twitterBearerToken", ""
+            resValue "string", "uniswapGraphUrl", "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
+            resValue "string", "etherscanKey", ""
+            resValue "string", "bscscanKey", ""
+            resValue "string", "polygonscanKey", ""
+            resValue "string", "snowtraceApiKey", ""
+            resValue "string", "optimisticEtherscanApiKey", ""
+            resValue "string", "arbiscanApiKey", ""
+            resValue "string", "gnosisscanApiKey", ""
+            resValue "string", "ftmscanApiKey", ""
+            resValue "string", "is_release", "true"
+            resValue "string", "guidesUrl", "https://raw.githubusercontent.com/DeusWallet/blockchain-crypto-guides/main/index.json"
+            resValue "string", "faqUrl", "https://raw.githubusercontent.com/DeusWallet/deus-wallet-faq/main/faq.json"
+            resValue "string", "coinsJsonUrl", "https://raw.githubusercontent.com/DeusWallet/deus-cryptocurrencies/main/coins.json"
+            resValue "string", "providerCoinsJsonUrl", "https://raw.githubusercontent.com/DeusWallet/deus-cryptocurrencies/main/provider.coins.json"
+            resValue "string", "marketApiBaseUrl", "https://api.blocksdecoded.com"
+            resValue "string", "marketApiKey", ""
+            resValue "string", "openSeaApiKey", ""
+            resValue "string", "walletConnectV2Key", ""
+            resValue "string", "solscanApiKey", ""
+            resValue "string", "trongridApiKeys", ""
+            resValue "string", "udnApiKey", ""
+            resValue "string", "oneInchApiKey", ""
+            resValue "string", "blocksDecodedEthereumRpc", "https://api.blocksdecoded.com/v1/ethereum-rpc/mainnet"
+        }
+
+        appcenterrelease {
+            initWith release
+            defaultConfig.versionCode System.getenv("BUILD_NUMBER")?.toInteger() ?: defaultConfig.versionCode
+            applicationIdSuffix ".appcenter"
+            signingConfig signingConfigs.appCenter
+            matchingFallbacks = ['release']
+        }
+
+    }
+
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packagingOptions {
+        resources {
+            pickFirsts += ['META-INF/atomicfu.kotlin_module']
+            excludes += ['META-INF/INDEX.LIST', 'META-INF/DEPENDENCIES', 'META-INF/LICENSE.md', 'META-INF/NOTICE.md']
+        }
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.4.0'
+    }
+    namespace 'io.deus.wallet'
+    lint {
+        disable 'LogNotTimber'
+    }
+
+    configurations.all { c ->
+        c.resolutionStrategy.dependencySubstitution {
+            substitute module('org.bouncycastle:bcprov-jdk15to18:1.68') using module('org.bouncycastle:bcprov-jdk15on:1.65')
+            substitute module('com.google.protobuf:protobuf-java:3.6.1') using module('com.google.protobuf:protobuf-javalite:3.21.1')
+            substitute module('net.jcip:jcip-annotations:1.0') using module('com.github.stephenc.jcip:jcip-annotations:1.0-1')
+
+            substitute module('com.tinder.scarlet:scarlet:0.1.12') using module('com.github.WalletConnect.Scarlet:scarlet:1.0.0')
+            substitute module('com.tinder.scarlet:websocket-okhttp:0.1.12') using module('com.github.WalletConnect.Scarlet:websocket-okhttp:1.0.0')
+            substitute module('com.tinder.scarlet:stream-adapter-rxjava2:0.1.12') using module('com.github.WalletConnect.Scarlet:stream-adapter-rxjava2:1.0.0')
+            substitute module('com.tinder.scarlet:message-adapter-gson:0.1.12') using module('com.github.WalletConnect.Scarlet:message-adapter-gson:1.0.0')
+            substitute module('com.tinder.scarlet:lifecycle-android:0.1.12') using module('com.github.WalletConnect.Scarlet:lifecycle-android:1.0.0')
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$appcompat_version"
+    implementation "androidx.constraintlayout:constraintlayout:$constraint_version"
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
+
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
+    // use -ktx for Kotlin
+    // alternatively - just LiveData
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
+    // alternatively - Lifecycles only (no ViewModel or LiveData).
+    //     Support library depends on this lightweight import
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
+    implementation "androidx.fragment:fragment-ktx:$fragment_ktx_version"
+    implementation "androidx.preference:preference-ktx:1.2.1"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+
+    //Splash screen
+    implementation "androidx.core:core-splashscreen:1.0.1"
+
+    //AppWidgets
+    implementation 'androidx.glance:glance-appwidget:1.0.0'
+
+    // Room
+    def room_version = '2.6.1'
+    implementation "androidx.room:room-runtime:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
+    implementation "androidx.room:room-rxjava2:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
+    // alternately - if using Java8, use the following instead of compiler
+    implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
+    // optional - ReactiveStreams support for LiveData
+    implementation "androidx.lifecycle:lifecycle-reactivestreams-ktx:$lifecycle_version"
+
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+
+    implementation "com.google.android.material:material:$material_version"
+
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    // Because RxAndroid releases are few and far between, it is recommended you also
+    // explicitly depend on RxJava's latest version for bug fixes and new features.
+    // (see https://github.com/ReactiveX/RxJava/releases for latest 2.x.x version)
+    implementation "io.reactivex.rxjava2:rxjava:$rxjava_version"
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-scalars:2.9.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.11.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation "androidx.biometric:biometric:$biometric_version"
+
+    implementation 'com.atlassian.commonmark:commonmark:0.17.0'
+    implementation "io.noties.markwon:core:4.6.2"
+
+    // ViewPager circle indicator
+    implementation 'me.relex:circleindicator:2.1.6'
+
+    //Custom tabs, chrome
+    implementation "androidx.browser:browser:1.7.0"
+
+    // Navigation component
+    implementation "androidx.navigation:navigation-fragment-ktx:$navigation_ktx_version"
+    implementation "androidx.navigation:navigation-ui-ktx:$navigation_ktx_version"
+
+    //Compose Navigation
+    implementation "androidx.navigation:navigation-compose:$navigation_ktx_version"
+    implementation "com.google.accompanist:accompanist-navigation-animation:$accompanist_version"
+
+    api 'com.journeyapps:zxing-android-embedded:4.3.0'
+
+    // WorkManager Kotlin
+    def work_version = "2.9.0"
+    implementation "androidx.work:work-runtime-ktx:$work_version"
+    // WorkManager RxJava2 support
+    implementation "androidx.work:work-rxjava2:$work_version"
+
+    def leakCanary = 'com.squareup.leakcanary:leakcanary-android:2.10'
+    appcenterdebugImplementation leakCanary
+    debugImplementation leakCanary
+
+    // Wallet kits
+    implementation 'com.github.horizontalsystems:ton-kit-kmm:51bdea4'
+    implementation 'com.github.horizontalsystems:bitcoin-kit-android:80fd413'
+    implementation 'com.github.horizontalsystems:ethereum-kit-android:f4957a9'
+    implementation 'com.github.horizontalsystems:blockchain-fee-rate-kit-android:1d3bd49'
+    implementation 'com.github.horizontalsystems:binance-chain-kit-android:c1509a2'
+    implementation 'com.github.horizontalsystems:market-kit-android:a0361bf'
+    implementation 'com.github.horizontalsystems:solana-kit-android:d8bb9f2'
+    implementation 'com.github.horizontalsystems:tron-kit-android:dc3dca7'
+    // Zcash SDK
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
+    implementation "cash.z.ecc.android:zcash-android-sdk:2.1.2"
+    implementation("io.github.binance:binance-connector-java:3.0.0rc2") {
+        exclude group: "org.bouncycastle", module: "bcprov-jdk18on"
+    }
+
+    // WalletConnect V2
+    implementation(platform("com.walletconnect:android-bom:1.15.0"))
+    implementation 'com.walletconnect:web3wallet'
+    implementation 'com.walletconnect:android-core'
+
+    // Unstoppable Domains
+    implementation 'com.github.unstoppabledomains:resolution-java:v7.1.0'
+
+    // Ethereum Name Service
+    implementation "org.web3j:core:4.9.0"
+
+    implementation 'com.twitter.twittertext:twitter-text:3.1.0'
+
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-rx2:1.7.3'
+
+    // UI modules
+
+    implementation project(':core')
+    implementation project(':components:icons')
+    implementation project(':components:chartview')
+
+    // Integration with activities
+    implementation 'androidx.activity:activity-compose:1.8.2'
+    // Compose Material Design
+    implementation "androidx.compose.material:material:$compose_version"
+    // Animations
+    implementation "androidx.compose.animation:animation:$compose_version"
+    // Tooling support (Previews, etc.)
+    implementation "androidx.compose.ui:ui-tooling:$compose_version"
+    // Integration with ViewModels
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0'
+
+    implementation "androidx.compose.runtime:runtime-livedata:$compose_version"
+
+    def coil_version = "2.5.0"
+    implementation "io.coil-kt:coil-compose:$coil_version"
+    implementation "io.coil-kt:coil-svg:$coil_version"
+    implementation("io.coil-kt:coil-gif:$coil_version")
+
+    // When using a AppCompat theme
+    implementation "com.google.accompanist:accompanist-appcompat-theme:$accompanist_version"
+    implementation "com.google.accompanist:accompanist-flowlayout:$accompanist_version"
+    implementation "com.google.accompanist:accompanist-permissions:$accompanist_version"
+
+    // UI Tests
+    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
+
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+
+    // optional - Test helpers for LiveData
+    testImplementation "junit:junit:$junit_version"
+    testImplementation "androidx.arch.core:core-testing:2.2.0"
+    testImplementation "org.mockito:mockito-core:3.3.3"
+    testImplementation 'com.nhaarman:mockito-kotlin-kt1.1:1.6.0'
+    testImplementation 'org.powermock:powermock-api-mockito2:2.0.7'
+    testImplementation 'org.powermock:powermock-module-junit4:2.0.7'
+
+    // Spek
+    testImplementation "org.spekframework.spek2:spek-dsl-jvm:2.0.9"
+    testRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:2.0.9"
+    testRuntimeOnly "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+
+    //Android Tor
+    implementation 'info.guardianproject:tor-android:0.4.7.14'
+    implementation 'info.guardianproject:jtorctl:0.4.5.7'
+
+    api 'com.jaredrummler:android-shell:1.0.0'
+    api 'com.offbynull.portmapper:portmapper:2.0.5'
+}
+
+configurations.all {
+    resolutionStrategy {
+        cacheChangingModulesFor 0, 'seconds'
+    }
+}
+
+// fixes reproducible builds (fixes difference in assets/dexopt/baseline.profm)
+// more info https://issuetracker.google.com/issues/231837768
+// remove after upgrading to 'com.android.tools.build:gradle:8.1.0' (AGP 8.1)
+project.afterEvaluate {
+    tasks.each { task ->
+        if (task.name.startsWith("compile") && task.name.endsWith("ReleaseArtProfile")) {
+            task.doLast {
+                outputs.files.each { file ->
+                    if (file.name.endsWith(".profm")) {
+                        println("Sorting ${file} ...")
+                        def version = ArtProfileSerializer.valueOf("METADATA_0_0_2")
+                        def profile = ArtProfileKt.ArtProfile(file)
+                        def keys = new ArrayList(profile.profileData.keySet())
+                        def sortedData = new LinkedHashMap()
+                        // xxx ignore not resolved classes; gradle can manage
+                        Collections.sort keys, new DexFile.Companion()
+                        keys.each { key -> sortedData[key] = profile.profileData[key] }
+                        new FileOutputStream(file).with {
+                            write(version.magicBytes$profgen)
+                            write(version.versionBytes$profgen)
+                            version.write$profgen(it, sortedData, "")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

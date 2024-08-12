@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="App_Name">Deus Dev</string>
+    <string name="App_Name_fake">Calculator</string>
+    <string name="App_Name_Chess">Chess</string>
+    <string name="App_Name_Calc">Calculator</string>
+    <string name="DeeplinkScheme" translatable="false">deus-dev</string>
+</resources>
